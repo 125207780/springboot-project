@@ -1,0 +1,36 @@
+body {
+    background-image: url(../image/login.png);
+}
+
+#login_main_div {
+    position: absolute;
+    width: 400px;
+    height: 250px;
+    margin-top: 15%;
+    margin-left: 55%;
+    background-color: rgba(110, 110, 159, 0.2);;
+}
+
+#user_register {
+    float: right;
+}
+
+#username {
+    margin-top: 45px;
+    width: 270px;
+    margin-left: 71px;
+}
+
+#password {
+    margin-top: 15px;
+    width: 270px;
+    margin-left: 71px;
+}
+
+#user_entry {
+    margin-left: 30%;
+}
+
+#user_register {
+    margin-right: 30%;
+}

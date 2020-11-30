@@ -4,145 +4,33 @@
     <meta charset="UTF-8">
     <title>chat room websocket</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
     <script th:src="@{/js/jquery-3.3.1.min.js}"></script>
+    <script th:src="@{/js/chat/chat.js}"></script>
 </head>
-<body class="container" style="width: 60%">
-    <div class="form-group" style="width: 100%; margin-top: 10px;">
-        <div style="width: 100%; background-color: #800080; color: #ffffff;">
-            <label for="user_name" style="float: left; margin-left: 45%">你好：</label>
-            <h5 id="user_name" th:text="${username}" style="width: 80%;"></h5>
+<body class="container">
+    <div id="chat_user_info_head" class="form-group">
+        <div id="chat_user_info_content">
+            <label id="chat_user_name_label" for="user_name">你好：</label>
+            <h5 id="user_name" th:text="${username}"></h5>
         </div>
     </div>
-    <div class="form-group" style="float: left; width: 100%;">
-        <label for="user_list" style="float: left;">选择聊天用户：</label>
-        <select id="user_list" style="width: 15%;"></select>
-        <span id="error_select_msg" style="color: red;"></span>
-    </div>
-    <div class="form-group" style="float: left; width: 100%;">
-        <div id="message_user" style="width: 25%; height: 450px; overflow-y: auto; position: relative; float: left;" class="form-control" readonly="readonly">
-            群成员：<span id="message_user_count"></span><br/>
+    <div id="chat_user_message_div" class="form-group">
+        <div id="message_user" class="form-control" readonly="readonly">
+            成员：<span id="message_user_count"></span><br/>
         </div>
-        <div id="message_chat" style="font-size: 13px; width: 75%; height: 300px; overflow-y: auto; position: relative; float: left;" class="form-control" readonly="readonly">
+        <div id="message_chat" class="form-control" readonly="readonly">
         </div>
-        <div style="width: 75%; float: right;">
-            <div style="width: 100%; height: 110px;">
-                <textarea style="height: 100%; border-bottom: #ffffff solid 0px;" id="chat_msg" value="" class="form-control"></textarea>
+        <div id="chat_user_message_send_div">
+            <div id="chat_user_message_content_div">
+                <textarea id="chat_msg" value="" class="form-control"></textarea>
             </div>
-            <div style="width: 100%; float: right; border-bottom: #808080 solid 1px;">
+            <div id="chat_user_message_btn_div">
+                <button style="float: right; margin-left: 10px;" id="user_exit" class="btn btn-warning">退出</button>
+                <button style="float: right; margin-left: 10px;" id="send_all" class="btn btn-info">群发消息</button>
                 <button style="float: right;" id="send" class="btn btn-info">发送消息</button>
-                <button style="float: right;" id="send_all" class="btn btn-info">群发消息</button>
-                <button style="float: right;" id="user_exit" class="btn btn-warning">退出</button>
             </div>
         </div>
     </div>
 </body>
-<script type="text/javascript">
-    $(document).ready(function() {
-        initUserList();
-        let urlPrefix = 'ws://localhost:8080/net/websocket/';
-        let ws = null;
-        let username = $('#user_name').text();
-        ws = initMsg(urlPrefix, username);
-        // 客户端发送对某一个客户的消息到服务器
-        $('#send').click(function() {
-            let userList = $("#user_list option:selected").val();
-            if (!userList) {
-                $("#error_select_msg").html("请选择一个用户！");
-                return;
-            }
-            let msg = $('#chat_msg').val();
-            if (!msg) {
-                alert("请输入聊天内容！");
-                return;
-            }
-            msg = msg + "[" + userList + "]" + "----------" + username;
-            if (ws) {
-                ws.send(msg);
-                //服务端发送的消息
-                $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + '&nbsp;&nbsp;</span><br/>');
-                $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg.substring(0, msg.indexOf('[')) + '</span></div>');
-                $("#chat_msg").val('');
-                $("#error_select_msg").empty();
-            }
-        });
-        // 客户端群发消息到服务器
-        $('#send_all').click(function() {
-            let msg = $('#chat_msg').val();
-            if (!msg) {
-                alert("请输入聊天内容！");
-                return;
-            }
-            msg = msg + "[allUsers]" + "----------" + username;
-            if (ws) {
-                ws.send(msg);
-                //服务端发送的消息
-                $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + ' 的群发消息&nbsp;&nbsp;</span><br/>');
-                $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg.replace('[allUsers]----------' + username, '') + '</span></div>');
-                $("#chat_msg").val('');
-                $("#error_select_msg").empty();
-            }
-        });
-        // 退出聊天室
-        $('#user_exit').click(function() {
-            if (ws) {
-                ws.close();
-            }
-            window.location.href = "/chat/login";
-        });
-        // 用户下拉列表点击事件
-        $("#user_list").on("change", function() {
-            $("#error_select_msg").empty();
-        });
-    });
-
-    /**
-     * 初始化用户列表
-     */
-    function initUserList() {
-        let username = $('#user_name').text();
-        $.ajax({
-            url: "/getUserList",
-            type: "POST",
-            data: {username: username},
-            success: function(data) {
-                let result = JSON.parse(data);
-                let html = "<option value=''>---请选择---</option>";
-                for (let i = 0; i < result.length; i++) {
-                    html += "<option value='" + result[i].username + "'>" + result[i].username + "</option>";
-                }
-                let userList = "";
-                for (let i = 0; i < result.length; i++) {
-                    userList += "<div class='select_user'>" + result[i].username + "</div>";
-                }
-                $("#user_list").html(html);
-                $("#message_user_count").text(result.length + "人");
-                $("#message_user").append(userList);
-            }
-        });
-    }
-
-    /**
-     * 初始化消息
-     *
-     * @param urlPrefix
-     * @param username
-     * @returns {WebSocket}
-     */
-    function initMsg(urlPrefix, username) {
-        let url = urlPrefix + username;
-        ws = new WebSocket(url);
-        ws.onopen = function () {
-            console.log("建立 websocket 连接...");
-        };
-        ws.onmessage = function(event) {
-            //服务端发送的消息
-            $('#message_chat').append(event.data + '\n');
-        };
-        ws.onclose = function() {
-            $('#message_chat').append('<div style="width: 100%; float: left;">用户[' + username + '] 已经离开聊天室!' + '</div>');
-            console.log("用户：[" + username + "]已关闭 websocket 连接...");
-        }
-        return ws;
-    }
-</script>
 </html>
