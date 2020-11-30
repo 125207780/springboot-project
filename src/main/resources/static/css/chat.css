@@ -65,7 +65,9 @@ body {
 
 #chat_msg {
     height: 100%;
-    border-bottom: #ffffff solid 0px;
+    resize: none;
+    border-style: none;
+    box-shadow: none;
 }
 
 #chat_user_message_btn_div {
