@@ -3,9 +3,8 @@ $(document).ready(function() {
     initUserList();
 
     let urlPrefix = 'ws://localhost:8080/net/websocket/';
-    let ws = null;
     let username = $('#user_name').text();
-    ws = initMsg(urlPrefix, username);
+    let ws = initMsg(urlPrefix, username);
 
     // 客户端发送对某一个客户的消息到服务器
     $('#send').click(function() {
@@ -20,29 +19,61 @@ $(document).ready(function() {
             $("#error_select_msg").html("请选择一个用户！");
             return;
         }
-        let msg = $('#chat_msg').val();
-        if (!msg) {
-            alert("请输入聊天内容！");
-            return;
+
+        // 获取图片对象
+        let fileList = document.getElementById("file").files;
+        let msg_content;
+        // 发送图片信息
+        if(fileList.length > 0) {
+            let fileReader = new FileReader();
+            fileReader.readAsDataURL(fileList[0]);
+            fileReader.onload = function (e) {
+                let msg_content1 = {
+                    msg: e.target.result,       // 消息内容
+                    acceptUser: selectUserInfo, // 接收消息方
+                    sendUser: username,         // 发送消息方
+                    sendType: "0",              // 发送类型：0私聊；1群聊
+                    msgType: 0                  // 消息类型：0文本；1图片
+                };
+                if (ws) {
+                    ws.send(JSON.stringify(msg_content1));
+                    //服务端发送的消息
+                    $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + '&nbsp;&nbsp;</span><br/>');
+                    $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;"><img style="width: 150px; height: auto;" src="' + e.target.result + '" /></span></div>');
+                    $("#chat_msg").val('');
+                    $("#error_select_msg").empty();
+                    // 让滚动条跟随消息一直在最底部
+                    $('#message_chat').scrollTop($('#message_chat')[0].scrollHeight);
+                    $("#chat_msg").focus();
+                }
+            }
         }
-        // msg = msg + "[" + selectUserInfo + "]" + "----------" + username;
-        let msg_content = {
-            msg: msg,                   // 消息内容
-            acceptUser: selectUserInfo, // 接收消息方
-            sendUser: username,         // 发送消息方
-            sendType: "0",              // 发送类型：0私聊；1群聊
-            msgType: "0"                // 消息类型：0文本；1图片
-        };
-        if (ws) {
-            ws.send(JSON.stringify(msg_content));
-            //服务端发送的消息
-            $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + '&nbsp;&nbsp;</span><br/>');
-            $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg + '</span></div>');
-            $("#chat_msg").val('');
-            $("#error_select_msg").empty();
-            // 让滚动条跟随消息一直在最底部
-            $('#message_chat').scrollTop($('#message_chat')[0].scrollHeight);
-            $("#chat_msg").focus();
+        // 发送文本消息
+        else {
+            let msg = $("#chat_msg").val();
+            if (!msg) {
+                alert("请输入聊天内容！");
+                return;
+            }
+            // msg = msg + "[" + selectUserInfo + "]" + "----------" + username;
+            msg_content = {
+                msg: msg,                   // 消息内容
+                acceptUser: selectUserInfo, // 接收消息方
+                sendUser: username,         // 发送消息方
+                sendType: "0",              // 发送类型：0私聊；1群聊
+                msgType: 0                  // 消息类型：0文本；1图片
+            };
+            if (ws) {
+                ws.send(JSON.stringify(msg_content));
+                //服务端发送的消息
+                $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + '&nbsp;&nbsp;</span><br/>');
+                $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg + '</span></div>');
+                $("#chat_msg").val('');
+                $("#error_select_msg").empty();
+                // 让滚动条跟随消息一直在最底部
+                $('#message_chat').scrollTop($('#message_chat')[0].scrollHeight);
+                $("#chat_msg").focus();
+            }
         }
     });
 
@@ -83,6 +114,41 @@ $(document).ready(function() {
         window.location.href = "/chat/login";
     });
 });
+
+//发送图片消息
+function chooseFile() {
+    let fileList = document.getElementById("file").files;
+    let type = fileList[0].type;
+    // let selectUserInfo = null;
+    // 获取左侧聊天对象
+    // $(".select_user").each(function() {
+    //     if ($(this).attr("data") === "selected") {
+    //         selectUserInfo = $(this).html();
+    //     }
+    // });
+    // let toUser = selectUserInfo;
+    let fileMsg;
+    if(fileList.length > 0) {
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(fileList[0]);
+        fileReader.onload = function (e) {
+            debugger;
+            fileMsg = e.target.result;
+            // let username = $('#user_name').text();
+            // let msg_content = {
+            //     msg: e.target.result,
+            //     acceptUser: toUser,
+            //     sendUser: username,
+            //     sendType: "1",
+            //     msgType: "1"
+            // };
+            // ws.send(JSON.stringify(msg_content));
+            return fileMsg;
+        }
+    } else {
+        return null;
+    }
+}
 
 /**
  * 初始化用户列表

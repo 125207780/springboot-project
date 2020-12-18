@@ -33,12 +33,14 @@ public class SocketHandler {
      * @param msg 发送的消息
      */
     public static void sendMessage(Session session, String msg) {
+        // 判断session是否为空
         if (session == null)
             return;
         final RemoteEndpoint.Basic basic = session.getBasicRemote();
         if (basic == null)
             return;
         try {
+            // 给用户发送消息
             basic.sendText(msg);
         } catch (IOException e) {
             log.error("消息发送异常，异常情况: {}", e.getMessage());
@@ -54,6 +56,7 @@ public class SocketHandler {
         log.info("广播：群发消息");
         // 遍历map，只输出给其他客户端，不给自己重复输出
         sessionMap().forEach((key, session) -> {
+            // 给除了自己以外的所有用户群发消息
             if (!username.equals(key)) {
                 sendMessage(session, message);
             }

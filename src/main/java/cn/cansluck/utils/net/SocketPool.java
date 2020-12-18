@@ -48,7 +48,7 @@ public class SocketPool {
      * 获取在线session池
      * @return 获取session池
      */
-    public static Map<String, Session> sessionMap(){
+    public static Map<String, Session> sessionMap() {
         return ONLINE_USER_SESSIONS;
     }
 }

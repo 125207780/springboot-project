@@ -26,11 +26,16 @@ public class ChatController {
      */
     @RequestMapping("/login")
     public String login(String username, String password, ModelMap map) {
+        // 判断是否为空
         if (null == username || "".equals(username))
+            // 为空则留在登陆页面
             return "login";
+        // 根据输入的用户名和密码查询用户信息
         boolean isLogin = userService.login(username, password);
+        // 判断是否存在该用户
         if (isLogin) {
             map.addAttribute("username", username);
+            // 存在则进入聊天室
             return "chat";
         }
         return "login";
