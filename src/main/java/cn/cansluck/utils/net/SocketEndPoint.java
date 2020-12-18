@@ -1,6 +1,8 @@
 package cn.cansluck.utils.net;
 
+import cn.cansluck.model.SocketMsg;
 import cn.cansluck.service.IUserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,19 +51,23 @@ public class SocketEndPoint {
     }
 
     @OnMessage
-    public void onMessage(String message) {
-        if (message.contains("[allUsers]")) {
-            String userInfo = message.substring(message.indexOf("[allUsers]")).replace("[allUsers]----------", "");
-            SocketHandler.sendMessageAll( "<div style='width: 100%; float: left;'>&nbsp;&nbsp;" + userInfo + "群发消息</div><div style='width: 100%; font-size: 18px; font-weight: bolder; float: right;'>" + message.substring(0, message.indexOf("[")) + "</div>", userInfo);
-        } else {
-            String acceptUser = message.substring(message.indexOf("[") + 1, message.lastIndexOf("]"));
-            String sendUser = message.substring(message.lastIndexOf("-") + 1, message.length());
+    public void onMessage(String message) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        SocketMsg socketMsg = objectMapper.readValue(message, SocketMsg.class);
+
+        // 群发
+        if (socketMsg.getSendType().equals("1")) {
+            SocketHandler.sendMessageAll( "<div style='width: 100%; float: left;'>&nbsp;&nbsp;" + socketMsg.getSendUser() + "群发消息</div><div style='width: 100%; font-size: 18px; font-weight: bolder; float: right;'>" + socketMsg.getMsg() + "</div>", socketMsg.getSendUser());
+        }
+        // 私聊
+        else {
             Session userSession;
             for (Map.Entry<String, Session> item : sessionMap().entrySet()) {
-                if (item.getKey().equals(acceptUser)) {
+                if (item.getKey().equals(socketMsg.getAcceptUser())) {
                     userSession = item.getValue();
-                    String userInfo = message.substring(0, message.indexOf("["));
-                    SocketHandler.sendMessage(userSession, "<div style='width: 100%; float: left;'>&nbsp;&nbsp;" + sendUser + "</div><div style='width: 100%; font-size: 18px; font-weight: bolder; float: right;'>" + userInfo + "</div>");
+                    SocketHandler.sendMessage(userSession, "<div style='width: 100%; float: left;'>&nbsp;&nbsp;" + socketMsg.getSendUser() + "</div><div style='width: 100%; font-size: 18px; font-weight: bolder; float: right;'>" + socketMsg.getMsg() + "</div>");
+                    // 只给某一个发送之后，就不需要再循环发送了
+                    break;
                 }
             }
         }

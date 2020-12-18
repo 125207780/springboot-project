@@ -8,7 +8,7 @@
     <script th:src="@{/js/jquery-3.3.1.min.js}"></script>
     <script th:src="@{/js/chat/chat.js}"></script>
 </head>
-<body class="container">
+<body class="container" style="margin-left: 25%">
     <div id="chat_user_info_head" class="form-group">
         <div id="chat_user_info_content">
             <label id="chat_user_name_label" for="user_name">你好：</label>
@@ -27,6 +27,7 @@
             </div>
             <div id="chat_user_message_btn_div">
                 <button style="float: right; margin-left: 10px;" id="user_exit" class="btn btn-warning">退出</button>
+                <button style="float: right;" id="sendImg" class="btn btn-info">发送图片</button>
                 <button style="float: right; margin-left: 10px;" id="send_all" class="btn btn-info">群发消息</button>
                 <button style="float: right;" id="send" class="btn btn-info">发送消息</button>
             </div>

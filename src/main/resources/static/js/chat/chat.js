@@ -25,12 +25,19 @@ $(document).ready(function() {
             alert("请输入聊天内容！");
             return;
         }
-        msg = msg + "[" + selectUserInfo + "]" + "----------" + username;
+        // msg = msg + "[" + selectUserInfo + "]" + "----------" + username;
+        let msg_content = {
+            msg: msg,                   // 消息内容
+            acceptUser: selectUserInfo, // 接收消息方
+            sendUser: username,         // 发送消息方
+            sendType: "0",              // 发送类型：0私聊；1群聊
+            msgType: "0"                // 消息类型：0文本；1图片
+        };
         if (ws) {
-            ws.send(msg);
+            ws.send(JSON.stringify(msg_content));
             //服务端发送的消息
             $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + '&nbsp;&nbsp;</span><br/>');
-            $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg.substring(0, msg.indexOf('[')) + '</span></div>');
+            $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg + '</span></div>');
             $("#chat_msg").val('');
             $("#error_select_msg").empty();
             // 让滚动条跟随消息一直在最底部
@@ -46,12 +53,19 @@ $(document).ready(function() {
             alert("请输入聊天内容！");
             return;
         }
-        msg = msg + "[allUsers]" + "----------" + username;
+        // msg = msg + "[allUsers]" + "----------" + username;
+        let msg_content = {
+            msg: msg,           // 消息内容
+            acceptUser: null,   // 接收消息方
+            sendUser: username, // 发送消息方
+            sendType: "1",      // 发送类型：0私聊；1群聊
+            msgType: "0"        // 消息类型：0文本；1图片
+        }
         if (ws) {
-            ws.send(msg);
+            ws.send(JSON.stringify(msg_content));
             //服务端发送的消息
             $('#message_chat').append('<div style="width: 100%; float: right;"><span style="float: right;">' + username + ' 的群发消息&nbsp;&nbsp;</span><br/>');
-            $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg.replace('[allUsers]----------' + username, '') + '</span></div>');
+            $('#message_chat').append('<span style="float: right; font-size: 18px; font-weight: bolder;">' + msg + '</span></div>');
             $("#chat_msg").val('');
             $("#error_select_msg").empty();
             $('#message_chat').scrollTop($('#message_chat')[0].scrollHeight);
@@ -62,6 +76,8 @@ $(document).ready(function() {
     // 退出聊天室
     $('#user_exit').click(function() {
         if (ws) {
+            $('#message_chat').append('<div style="width: 100%; float: left;">用户[' + username + '] 已经离开聊天室!' + '</div>');
+            console.log("用户：[" + username + "]已关闭 websocket 连接...");
             ws.close();
         }
         window.location.href = "/chat/login";
@@ -115,12 +131,12 @@ function initUserList() {
  */
 function initMsg(urlPrefix, username) {
     let url = urlPrefix + username;
-    ws = new WebSocket(url);
+    let ws = new WebSocket(url);
     ws.onopen = function () {
         console.log("建立 websocket 连接...");
     };
     ws.onmessage = function(event) {
-        //服务端发送的消息
+        // 服务端发送的消息
         $('#message_chat').append(event.data + '\n');
     };
     ws.onclose = function() {
